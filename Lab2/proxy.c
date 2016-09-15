@@ -123,20 +123,43 @@ int main(int argc, char **argv)
             continue;
         }
 
+        if (!connect(server_socket, (struct sockaddr *)&their_addr, sin_size)){
+          perror("failed to connect proxy_socket");
+            exit(1);
+          }
+
+        // get client IP adress
         inet_ntop(their_addr.ss_family,
             get_in_addr((struct sockaddr *)&their_addr),
             s, sizeof s);
         printf("server: got connection from %s\n", s);
 
         if (!fork()) { // this is the child process
-            close(proxy_socket); // child doesn't need the listener
-            if (send(server_socket, "Hello, world!", 13, 0) == -1)
+          close(proxy_socket); // child doesn't need the listener
+
+            void* message_buffer;
+            int message_buffer_len = 100000;
+            ssize_t bytes_recieved;
+
+            message_buffer = calloc(message_buffer_len, sizeof(char));
+            if (message_buffer_len == -1){
+              perror("Failed to allocate memory");
+              exit(1);
+            }
+
+            bytes_recieved = recv(server_socket, message_buffer, message_buffer_len, 0);
+            if (bytes_recieved == -1){
+              perror("failed to receive data from client");
+                exit(1);
+            }
+            printf(message_buffer);
+            if (send(server_socket, message_buffer, bytes_recieved, 0) == -1)
                 perror("send");
             close(server_socket);
-            exit(0);
-        }
+            exit(1);
+            }
 
-        close(server_socket);  // parent doesn't need this
+            close(server_socket);  // parent doesn't need this
     }
 
   return 1;
