@@ -11,6 +11,8 @@
 #include <sys/wait.h>
 #include <signal.h>
 
+#include "proxy_client.h"
+
 #define BACKLOG 10
 
 void sigchld_handler(int s)
@@ -34,10 +36,9 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-int main(int argc, char **argv)
-{
-  char* proxy_port;
-  int proxy_socket, server_socket, client_socket;
+void proxy_server(char* proxy_port){
+
+  int proxy_socket, server_socket;
   struct addrinfo hints, *servinfo, *p;
   struct sockaddr_storage their_addr; // connector's address information
   socklen_t sin_size;
@@ -47,27 +48,12 @@ int main(int argc, char **argv)
   int rv;
   int status;
 
-  // Parse command line argument for port to start the proxy server on
-  if (argc == 1) {
-    proxy_port = "8080";
-  } else if (argc == 2) {
-    printf("%i", atoi(argv[1]));
-    if (atoi(argv[1]) < 1023) {
-      printf("Error! %s not a valid port! Starting on 8080 instead.\n", argv[1]);
-      proxy_port = "8080";
-    } else {
-      proxy_port = argv[1];
-    }
-  }
-
-  printf("proxy_port is %s\n", proxy_port);
-
   memset(&hints, 0, sizeof hints); // make sure the struct is empty
   hints.ai_family = AF_INET;       // we want IPv4
   hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
   hints.ai_flags = AI_PASSIVE;     // fill in my IP for me
 
-  if ((status = getaddrinfo(NULL, "3490", &hints, &servinfo)) != 0) {
+  if ((status = getaddrinfo(NULL, proxy_port, &hints, &servinfo)) != 0) {
     fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
     exit(1);
   }
@@ -137,12 +123,12 @@ int main(int argc, char **argv)
         if (!fork()) { // this is the child process
           close(proxy_socket); // child doesn't need the listener
 
-            void* message_buffer;
-            int message_buffer_len = 100000;
-            ssize_t bytes_recieved;
+          char* message_buffer;
+          int message_buffer_len = 2000;
+          ssize_t bytes_recieved;
 
-            message_buffer = calloc(message_buffer_len, sizeof(char));
-            if (message_buffer_len == -1){
+          message_buffer = calloc(message_buffer_len, sizeof(char));
+            if (message_buffer == NULL){
               perror("Failed to allocate memory");
               exit(1);
             }
@@ -150,17 +136,44 @@ int main(int argc, char **argv)
             bytes_recieved = recv(server_socket, message_buffer, message_buffer_len, 0);
             if (bytes_recieved == -1){
               perror("failed to receive data from client");
-                exit(1);
-            }
-            printf(message_buffer);
-            if (send(server_socket, message_buffer, bytes_recieved, 0) == -1)
-                perror("send");
-            close(server_socket);
-            exit(1);
+              exit(1);
             }
 
-            close(server_socket);  // parent doesn't need this
+            char* content_buffer;
+            int content_length;
+
+            printf("%s", get_hostname_from_get_request(message_buffer, message_buffer_len));
+
+            //printf("%s", message_buffer);
+            if (send(server_socket, message_buffer, bytes_recieved, 0) == -1)
+              perror("send");
+            close(server_socket);
+            exit(1);
+        }
+
+        close(server_socket);  // parent doesn't need this
     }
+}
+
+int main(int argc, char **argv)
+{
+  char* proxy_port;
+
+  // Parse command line argument for port to start the proxy server on
+  if (argc == 1) {
+    proxy_port = "8080";
+  } else if (argc == 2) {
+    if (atoi(argv[1]) < 1023) {
+      printf("Error! %s not a valid port! Starting on 8080 instead.\n", argv[1]);
+      proxy_port = "8080";
+    } else {
+      proxy_port = argv[1];
+    }
+  }
+
+  printf("Starting proxy on port %s\n", proxy_port);
+
+  proxy_server(proxy_port);
 
   return 1;
 }
