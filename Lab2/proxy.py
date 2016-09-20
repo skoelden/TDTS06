@@ -13,6 +13,12 @@ class easy_socket:
     def connect(self, host, port=80):
         self.sock.connect((host, port))
 
+    def shutdown(self, how=socket.SHUT_RDWR):
+        self.sock.shutdown(how)
+
+    def close(self):
+        self.sock.close()
+
     def send(self, msg):
         total_sent = 0
         msg_length = len(msg)
@@ -27,34 +33,87 @@ class easy_socket:
         bytes_read = 0
 
         chunk = self.sock.recv(2048)
+        print(chunk)
         chunks.append(chunk)
         bytes_read = bytes_read + len(chunk)
 
-        m = re.search(r'content-length: ([^\s]+)', chunk.lower())
-        content_length = int(m.group(1))
+        m_cl = re.search(r'content-length: ([^\s]+)', chunk.lower())
+        m_te = re.search(r'transfer-encoding: ([^\s]+)', chunk.lower())
+        if m_cl is not None:
+            # Header has content length
+            content_length = int(m_cl.group(1))
 
-        if content_length > bytes_read:
-            while bytes_read < content_length:
-                chunk = self.sock.recv(min(content_length - bytes_read, 2048))
-                chunks.append(chunk)
-                bytes_read = bytes_read + len(chunk)
+            if content_length > bytes_read:
+                while bytes_read < content_length:
+                    chunk = self.sock.recv(min(content_length - bytes_read, 2048))
+                    chunks.append(chunk)
+                    bytes_read = bytes_read + len(chunk)
+
+        elif m_te is not None:
+            #print(chunk)
+            return
 
         return ''.join(chunks)
 
-def request_handler(ok_get_request, client_to_proxy_socket):
+    def recv(self, num):
+        self.sock.recv(num)
+
+    def getpeername(self):
+        self.sock.getpeername()
+
+def request_handler(s):
+    get_request = s.recv(2048)
+
+    client_to_proxy_socket = easy_socket(sock=s)
+
+    print(get_request)
+    if get_request[0:3] != "GET":
+        #This is not a GET request, drop it
+        print("AAAARRRGHHHHHHH, this ain't no GET request!")
+        print(get_request)
+        client_to_proxy_socket.shutdown()
+        client_to_proxy_socket.close()
+        return
+
     # Search header for blocked content
 
-    m = re.search(r'Host: ([^\s]+)', ok_get_request)
-    host = m.group(1)
+    host = get_host(get_request)
     print("GET request for {}".format(host))
 
     proxy_to_server_socket = easy_socket()
     proxy_to_server_socket.connect(host=host, port=80)
 
-    proxy_to_server_socket.send(ok_get_request)
+    proxy_to_server_socket.send(get_request)
     http_response = proxy_to_server_socket.receive_http_response()
+    proxy_to_server_socket.shutdown()
+    proxy_to_server_socket.close()
 
-    client_to_proxy_socket.send(http_response)
+    http_version = get_http_version(get_request)
+    if http_version == '1.0':
+        client_to_proxy_socket.send(http_response)
+        client_to_proxy_socket.shutdown()
+        client_to_proxy_socket.close()
+        return
+    else:
+        client_to_proxy_socket.send(http_response)
+        client_to_proxy_socket.shutdown()
+        client_to_proxy_socket.close()
+        return
+        # Check connection type
+        # Mabye, get timeout value
+        # Mabye, set timer
+        # wait
+
+
+def get_http_version(get_request):
+    m = re.search(r'http\/(\d\.\d)', get_request.lower())
+    version = m.group(1)
+    return version
+
+def get_host(get_request):
+    m = re.search(r'host: ([^\s]+)', get_request.lower())
+    host = m.group(1)
+    return host
 
 def main():
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -64,21 +123,17 @@ def main():
 
     while 1:
         (s, address) = serversocket.accept()
-       
-        
-        print("Connected to {}".format(address))
-        get_request = s.recv(2048)
 
-        print(get_request)
-        if get_request[0:3] != "GET":
-            #This is not a GET request, drop it
-            break
+        print("Connected to {}".format(address))
 
         # Fork and pass it to the request_handler
-        pid = os.fork()
-        if pid == 0:
-            client_to_proxy_socket = easy_socket(sock=s)
-            request_handler(get_request, client_to_proxy_socket)
+        #pid = os.fork()
+        #if pid == 0:
+            #serversocket.close()
+        request_handler(s)
+         #   break
+        #else:
+            #s.close()
 
 if __name__ == "__main__":
     main()
