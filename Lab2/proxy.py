@@ -108,6 +108,10 @@ class easy_socket:
     def settimeout(self, num):
         self.sock.settimeout(num)
 
+def searchURL(get_request):
+    badURL = re.search('spongebob', get_request.lower())
+    return badURL
+
 def request_handler(s):
     get_request = s.recv(2048)
 
@@ -122,10 +126,19 @@ def request_handler(s):
             client_to_proxy_socket.shutdown()
             client_to_proxy_socket.close()
             return
-
+        print get_request
+        #print get_request
         # Search header for blocked content
+        badURL = searchURL(get_request)
+        if badURL is not None:
+            # The URL contained bad word(s)
+            print("Bad URL")
+            host = "www.ida.liu.se"
+            get_request = "GET http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error1.html HTTP/1.1\r\nHost: www.ida.liu.se\r\nUser-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0\r\nAccept: */*\n\rAccept-Language: en-US,en;q=0.5\r\nAccept-Encoding: gzip, deflate\r\nConnection: keep-alive\r\n\r\n"
+        else:
+            print("Good URL")
+            host = get_host(get_request)
 
-        host = get_host(get_request)
         print("GET request for {}".format(host))
 
         proxy_to_server_socket = easy_socket()
