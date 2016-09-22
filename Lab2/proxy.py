@@ -129,6 +129,7 @@ def request_handler(s):
         print get_request
         #print get_request
         # Search header for blocked content
+
         badURL = searchURL(get_request)
         if badURL is not None:
             # The URL contained bad word(s)
@@ -138,6 +139,12 @@ def request_handler(s):
         else:
             print("Good URL")
             host = get_host(get_request)
+
+
+        # Remove the host from get request first line
+        get_request = re.sub('(?P<get>GET) http://' + host + '(?P<path>.+) ', '\g<get> \g<path> ',get_request)
+
+
 
         print("GET request for {}".format(host))
 
