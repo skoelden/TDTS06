@@ -124,8 +124,13 @@ def request_handler(s):
             return
 
         # Search header for blocked content
-
+        print(get_request)
         host = get_host(get_request)
+        print(host)
+        # Remove the host from get request first line
+        get_request = re.sub('(?P<get>GET) http://' + host + '(?P<path>.+) ', '\g<get> \g<path> ',get_request)
+        print(get_request)
+
         print("GET request for {}".format(host))
 
         proxy_to_server_socket = easy_socket()
