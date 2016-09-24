@@ -17,7 +17,7 @@ def main():
     if len(sys.argv) < 2:
         port = 3490
         print("No port given, default port: {}".format(port))
-    elif int(sys.argv[1]) >= 1024 and int(sys.argv[1]) <= 100000:
+    elif int(sys.argv[1]) >= port_min and int(sys.argv[1]) <= port_max:
         port = int(sys.argv[1])
         print("Port: {}".format(port))
     else:
@@ -30,7 +30,6 @@ def main():
     while 1:
         (s, address) = serversocket.accept()
 
-        print("Spawning new thread")
         new_request = request_handler(s)
         new_request.run()
 

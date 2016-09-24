@@ -2,6 +2,25 @@ import re
 
 from collections import OrderedDict
 
+def search_URL(get_request):
+    bad_URL = re.search('spongebob', get_request.lower())
+    if bad_URL is not None:
+        return True
+    else:
+        return False
+
+def search_content(http_response):
+    header = http_response.split('\r\n\r\n')[0]
+    header_dict = header_to_dict(header)
+
+    if 'content-type' in header_dict:
+        if header_dict['content-type'].startswith('text'):
+            bad_content = re.search('spongebob', http_response.lower())
+            if bad_content is not None:
+                # The content contained bad word(s)
+                return True
+
+    return False
 
 def get_http_version(firstline):
     m = re.search(r'http\/(\d\.\d)', firstline.lower())
@@ -43,18 +62,18 @@ def receive_http_response(sock):
         if m_cl is not None:
             # Header has content length
             parts = []
-            bytes_read = 0
+            content_read = 0
 
             parts.append(part)
-            bytes_read = bytes_read + len(part)
+            content_read = content_read + len(part.split('\r\n\r\n')[1])
 
             content_length = int(m_cl.group(1))
 
-            if content_length > bytes_read:
-                while bytes_read < content_length:
-                    part = sock.recv(min(content_length - bytes_read, 2048))
+            if content_length > content_read:
+                while content_read < content_length:
+                    part = sock.recv(min(content_length - content_read, 2048))
                     parts.append(part)
-                    bytes_read = bytes_read + len(part)
+                    content_read = content_read + len(part)
 
             return ''.join(parts)
 
@@ -64,12 +83,10 @@ def receive_http_response(sock):
                 return
             else:
                 unchunkified_response = []
-                # Find end of header
-                m_eoh = re.search(r'(\r\n\r\n)', part)
-                header_length = m_eoh.end(1)
-                unchunkified_response.append(part[:header_length])
+                tmp = part.split('\r\n\r\n')
+                unchunkified_response.append(tmp[0])
 
-                part = part[header_length:]
+                part = tmp[1]
                 m_chunk_header = re.match(r'([a-f0-9]*)\r\n', part)
                 part = part[m_chunk_header.end(0):]
 
