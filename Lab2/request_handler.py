@@ -4,14 +4,15 @@ import re
 
 
 from helpers import *
-from simple_sock import simple_sock
 
-threadLimiter = threading.BoundedSemaphore(4)
+threadLimiter = threading.BoundedSemaphore(8)
 
 class request_handler(threading.Thread):
 
-    def __init__(self, s):
+    def __init__(self, s, banned_words):
+        threading.Thread.__init__(self)
         self.client_to_proxy_socket = s
+        self.banned_words = banned_words
 
     def run(self):
         threadLimiter.acquire()
@@ -25,7 +26,7 @@ class request_handler(threading.Thread):
                 self.client_to_proxy_socket.close()
                 return
 
-            if search_URL(self.get_request):
+            if URL_contains_bad_words(self.get_request, self.banned_words):
                 print("Bad URL for host {}: {}".format(self.get_request_dict['host'],
                                                        self.get_request_dict['first_line']))
                 self.http_response = "HTTP/1.1 302 Found\r\nLocation: http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error1.html\r\nHost: http://www.ida.liu.se\r\nConnection: close\r\n\r\n"
@@ -48,16 +49,16 @@ class request_handler(threading.Thread):
 
                 self.proxy_to_server_socket.close()
 
-                if self.http_response is not None:
-                    if search_content(self.http_response):
-                        print("Bad content for host {}".format(self.get_request_dict['host']))
-                        self.http_response = "HTTP/1.1 302 Found\r\nLocation: http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html\r\nHost: http://www.ida.liu.se\r\nConnection: close\r\n\r\n"
+            if self.http_response is not None:
+                if content_contains_bad_words(self.http_response, self.banned_words):
+                    print("Bad content for host {}".format(self.get_request_dict['host']))
+                    self.http_response = "HTTP/1.1 302 Found\r\nLocation: http://www.ida.liu.se/~TDTS04/labs/2011/ass2/error2.html\r\nHost: http://www.ida.liu.se\r\nConnection: close\r\n\r\n"
 
 
 
-                    self.client_to_proxy_socket.sendall(self.http_response)
+                self.client_to_proxy_socket.sendall(self.http_response)
 
-                self.client_to_proxy_socket.close()
-                return
+            self.client_to_proxy_socket.close()
         finally:
-            threadLimiter.release()
+         threadLimiter.release()
+         return

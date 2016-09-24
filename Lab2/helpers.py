@@ -2,23 +2,25 @@ import re
 
 from collections import OrderedDict
 
-def search_URL(get_request):
-    bad_URL = re.search('spongebob', get_request.lower())
-    if bad_URL is not None:
-        return True
-    else:
-        return False
+def URL_contains_bad_words(get_request, banned_words):
+    for banned_word in banned_words:
+        bad_URL = re.search(banned_word, get_request.lower())
+        if bad_URL is not None:
+            return True
 
-def search_content(http_response):
+    return False
+
+def content_contains_bad_words(http_response, banned_words):
     header = http_response.split('\r\n\r\n')[0]
     header_dict = header_to_dict(header)
 
     if 'content-type' in header_dict:
         if header_dict['content-type'].startswith('text'):
-            bad_content = re.search('spongebob', http_response.lower())
-            if bad_content is not None:
-                # The content contained bad word(s)
-                return True
+            for banned_word in banned_words:
+                bad_content = re.search(banned_word, http_response.lower())
+                if bad_content is not None:
+                    # The content contained bad word(s)
+                    return True
 
     return False
 
@@ -53,8 +55,10 @@ def serialize_header_dict(header_dict):
 def receive_http_response(sock):
 
         part = sock.recv(2048)
-        if re.search(r'HTTP/\d.\d 30[14]', part):
+        if re.search(r'HTTP/\d.\d 30[124]', part):
             return part
+
+        print(part)
 
         m_cl = re.search(r'content-length: ([^\s]+)', part.lower())
         m_te = re.search(r'transfer-encoding: ([^\s]+)', part.lower())
@@ -83,17 +87,25 @@ def receive_http_response(sock):
                 return
             else:
                 unchunkified_response = []
-                tmp = part.split('\r\n\r\n')
-                unchunkified_response.append(tmp[0])
+                header, content = part.split('\r\n\r\n')
+                unchunkified_response.append(header)
+                unchunkified_response.append('\r\n\r\n')
 
-                part = tmp[1]
-                m_chunk_header = re.match(r'([a-f0-9]*)\r\n', part)
-                part = part[m_chunk_header.end(0):]
+                #m_chunk_header = re.match(r'([a-f0-9]*)\r\n', part)
+                chunk_header, chunk = content.split('\r\n')
+
+                #print("Header: {}".format(header))
+                #print("Chunk header: {}".format(chunk_header))
+                #print("Chunk: {}".format(chunk))
+                
 
                 content_length = 0
                 #for i in range(1,3):
-                while  m_chunk_header.group(1) != "":
-                    chunk_size = int(m_chunk_header.group(1), 16)
+                while not chunk_header == "":
+                    print(repr(chunk_header))
+                    chunk_size = int(chunk_header, 16)
+                    print(chunk_size)
+                    return
                     content_length += chunk_size
 
                     if len(part) < chunk_size:
@@ -102,7 +114,7 @@ def receive_http_response(sock):
                         while True:
                             tmp = sock.recv(2048)
 
-                            if len(chunk) + len(tmp) > chunk_size:
+                            if len(chunk) + len(tmp) >= chunk_size:
                                 break
 
                             chunk += tmp
