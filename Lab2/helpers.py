@@ -54,78 +54,67 @@ def serialize_header_dict(header_dict):
 
 def receive_http_response(sock):
 
-        part = sock.recv(2048)
-        if re.search(r'HTTP/\d.\d 30[124]', part):
-            return part
+        data = sock.recv(2048)
+        if re.search(r'HTTP/\d.\d 30[124]', data):
+            return data
 
-        print(part)
+        header, data = data.split('\r\n\r\n')
+        #print(header)
+        #print("")
+        #print(data)
 
-        m_cl = re.search(r'content-length: ([^\s]+)', part.lower())
-        m_te = re.search(r'transfer-encoding: ([^\s]+)', part.lower())
+        header_dict = header_to_dict(header)
 
-        if m_cl is not None:
-            # Header has content length
-            parts = []
-            content_read = 0
+        if 'content-length' in header_dict:
 
-            parts.append(part)
-            content_read = content_read + len(part.split('\r\n\r\n')[1])
+            content = data
+            content_read = len(data)
 
-            content_length = int(m_cl.group(1))
+            content_length = int(header_dict['content-length'])
 
             if content_length > content_read:
                 while content_read < content_length:
-                    part = sock.recv(min(content_length - content_read, 2048))
-                    parts.append(part)
-                    content_read = content_read + len(part)
+                    data = sock.recv(min(content_length - content_read, 2048))
+                    content.append(data)
+                    content_read = content_read + len(data)
 
-            return ''.join(parts)
+            return serialize_header_dict(header_dict) + ''.join(content)
 
-        elif m_te is not None:
-            if m_te.group(1).lower() != 'chunked':
-                print("AAAARRRGHHHHHHH, this ain't no transfer-encoding i know about!")
-                return
+        elif 'transfer-encoding' in header_dict:
+            if False: #not  header_dict['transfer-encoding'] == 'chunked':
+               print("AAAARRRGHHHHHHH, this ain't no transfer-encoding i know about!")
+              #  return
             else:
-                unchunkified_response = []
-                header, content = part.split('\r\n\r\n')
-                unchunkified_response.append(header)
-                unchunkified_response.append('\r\n\r\n')
+
+                unchunkified_content = []
 
                 #m_chunk_header = re.match(r'([a-f0-9]*)\r\n', part)
-                chunk_header, chunk = content.split('\r\n')
-
+                chunk_header, data = data.split('\r\n')
+                print("Nara nu...")
                 #print("Header: {}".format(header))
                 #print("Chunk header: {}".format(chunk_header))
                 #print("Chunk: {}".format(chunk))
-                
-
-                content_length = 0
-                #for i in range(1,3):
-                while not chunk_header == "":
-                    print(repr(chunk_header))
+                print(chunk_header)
+                while not (chunk_header == "" or chunk_header == "0"):
+                    # Read an entire chunk
                     chunk_size = int(chunk_header, 16)
-                    print(chunk_size)
-                    return
-                    content_length += chunk_size
 
-                    if len(part) < chunk_size:
-                        chunk = part
+                    if len(data) < chunk_size:
+                        # Need to fetch more data
 
-                        while True:
+                        while len(data) < chunk_size:
                             tmp = sock.recv(2048)
+                            data += tmp
 
-                            if len(chunk) + len(tmp) >= chunk_size:
-                                break
+                    print(len(data) < chunk_size)
+                    # We have a full chunk in data
+                    unchunkified_content.append(data[:chunk_size])
+                    data = data[chunk_size+2:]
+                    chunk_header, data = data.split('\r\n')
 
-                            chunk += tmp
+                print("Efter while not chunk_header...")
+                content = ''.join(unchunkified_content)
+                del header_dict['transfer-encoding']
+                header_dict['content-length'] = len(content)
 
-                        part = chunk + tmp # part now contatins the full chunk
-
-                    unchunkified_response.append(part[:chunk_size])
-                    part = part[chunk_size:]
-                    m_chunk_header = re.match(r'([a-f0-9]*)\r\n', part)
-
-                response = ''.join(unchunkified_response)
-                response = re.sub(r'[Tt]ransfer-[Ee]ncoding: chunked', 'Content-length: {}'.format(content_length), response)
-                #print(response)
-                return response
+                return serialize_header_dict(header_dict) + content
