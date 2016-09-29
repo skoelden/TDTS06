@@ -54,67 +54,67 @@ def serialize_header_dict(header_dict):
 
 def receive_http_response(sock):
 
-        data = sock.recv(2048)
-        if re.search(r'HTTP/\d.\d 30[124]', data):
-            return data
+#    print("Recieving data")
+    data = sock.recv(2048)
+    if re.search(r'HTTP/\d.\d 30[124]', data):
+        return data
 
-        header, data = data.split('\r\n\r\n')
-        #print(header)
-        #print("")
-        #print(data)
+ #   print("Packet is of 200 (ish) type")
+    header, data = data.split('\r\n\r\n')
+    #print(header)
+    #print("")
+    #print(data)
 
-        header_dict = header_to_dict(header)
+#    print("Header is: \n{}".format(header))
+#    print("Data is: \n{}".format(data))
+    header_dict = header_to_dict(header)
 
-        if 'content-length' in header_dict:
+    if 'content-length' in header_dict:
 
-            content = data
-            content_read = len(data)
+        content = [data]
+        content_read = len(data)
 
-            content_length = int(header_dict['content-length'])
+        content_length = int(header_dict['content-length'])
 
-            if content_length > content_read:
-                while content_read < content_length:
-                    data = sock.recv(min(content_length - content_read, 2048))
-                    content.append(data)
-                    content_read = content_read + len(data)
+        if content_length > content_read:
+            while content_read < content_length:
+                data = sock.recv(min(content_length - content_read, 2048))
+                content.append(data)
+                content_read = content_read + len(data)
 
-            return serialize_header_dict(header_dict) + ''.join(content)
+        return serialize_header_dict(header_dict) + ''.join(content)
 
-        elif 'transfer-encoding' in header_dict:
-            if False: #not  header_dict['transfer-encoding'] == 'chunked':
-               print("AAAARRRGHHHHHHH, this ain't no transfer-encoding i know about!")
-              #  return
-            else:
+    elif 'transfer-encoding' in header_dict:
 
-                unchunkified_content = []
+            #print("Data is chunked")
+            unchunkified_content = []
 
-                #m_chunk_header = re.match(r'([a-f0-9]*)\r\n', part)
-                chunk_header, data = data.split('\r\n')
-                print("Nara nu...")
-                #print("Header: {}".format(header))
-                #print("Chunk header: {}".format(chunk_header))
-                #print("Chunk: {}".format(chunk))
-                print(chunk_header)
-                while not (chunk_header == "" or chunk_header == "0"):
-                    # Read an entire chunk
-                    chunk_size = int(chunk_header, 16)
+            while not data[-5:] == "0\r\n\r\n":
+                tmp = sock.recv(2048)
+                data += tmp
 
-                    if len(data) < chunk_size:
-                        # Need to fetch more data
+            chunk_header, data = data.split('\r\n', 1)
+            #print("Chunk header is: {}\n".format(repr(chunk_header)))
+            #print("Data is now1: \n{}\n".format(repr(data)))
 
-                        while len(data) < chunk_size:
-                            tmp = sock.recv(2048)
-                            data += tmp
+            while not chunk_header == "0":
+                # Read an entire chunk
+                chunk_size = int(chunk_header, 16)
+                #print("chunk_size is: {}".format(chunk_size))
 
-                    print(len(data) < chunk_size)
-                    # We have a full chunk in data
-                    unchunkified_content.append(data[:chunk_size])
-                    data = data[chunk_size+2:]
-                    chunk_header, data = data.split('\r\n')
+                # We have a full chunk in data
+                #print("Appending chunk containing: {}\n".format(repr(data[:chunk_size])))
+                unchunkified_content.append(data[:chunk_size])
+                data = data[chunk_size+2:]
+                #print("Data is now2: \n{}\n".format(repr(data)))
+                chunk_header, data = data.split('\r\n', 1)
+                #print("Chunk header is: {}".format(repr(chunk_header)))
+                #print("Data is now3: \n{}".format(repr(data)))
 
-                print("Efter while not chunk_header...")
-                content = ''.join(unchunkified_content)
-                del header_dict['transfer-encoding']
-                header_dict['content-length'] = len(content)
+            content = ''.join(unchunkified_content)
 
-                return serialize_header_dict(header_dict) + content
+            del header_dict['transfer-encoding']
+            header_dict.update({'content-length':str(len(content))})
+
+ #           print(serialize_header_dict(header_dict))
+            return serialize_header_dict(header_dict) + content
