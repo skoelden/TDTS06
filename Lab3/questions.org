@@ -1,0 +1,37 @@
+1. Firt package in POST request is number 4. Last package is number 199, since the next non-ACK package from the server is 200 OK.
+
+2. Client IP is 192.168.1.102 and its port is 1161.
+
+3. Server IP is 128.119.245.12 port 80
+
+4. SYN to initiate connection has sequence number 0. The segment has the SYN flag set to 1.
+
+5. SYNACK sent from server has sequence number 0. The ACKnowledgement number is 1 (0 + 1 since 0 was the sequence number of previous segment and the next segment field was empty).
+   The SYNACK segment has both the SYN and ACK flags set to 1
+
+6. The segment containing the start of the POST request has sequence number 1.
+
+7 and 8.
+
+| Packet sent no | Sequence no | Time sent | Time ACKed |     Diff | Estimated RTT | Segment length (Bytes) |
+|----------------+-------------+-----------+------------+----------+---------------+------------------------|
+|              1 |           1 |  0.026477 |   0.053937 |  0.02746 |       0.02746 |                    565 |
+|              2 |         566 |  0.041737 |   0.077294 | 0.035557 |   0.028472125 |                   1460 |
+|              3 |        2026 |  0.054026 |   0.124085 | 0.070059 |   0.033670484 |                   1460 |
+|              4 |        3486 |  0.054690 |   0.169118 | 0.114428 |   0.043765174 |                   1460 |
+|              5 |        4946 |  0.077405 |   0.217299 | 0.139894 |   0.055781277 |                   1460 |
+|              6 |        6406 |  0.078157 |   0.267802 | 0.189645 |   0.072514242 |                   1460 |
+|----------------+-------------+-----------+------------+----------+---------------+------------------------|
+
+#+TBLFM: $5=$4-$3
+#+TBLFM: @2$6=$-1
+#+TBLFM: @3$6..@7$6 = (@-1)*(1-1/8) + ($-1)*(1/8)
+
+9. The minimum window size is 5840, sent in the SYNACK. Window size is increasing (not strictly) during the entire transmission
+
+10. No, client never sends the same sequence number twice.
+
+11. The server typically ACKs entire TCP segments, i.e. 1460 bytes. There are exceptions, for example no. 88 in the trace ACKs 2920 bytes.
+
+12. Last ACK before 200 OK is for byte 164091 at time 5.455. This gives an average throughput of 30080 Bytes/s ~240 Kb/s.
+    This includes TCP setup handshake and wating for the final ACK, but excluding these have little significance on the calculations.
