@@ -1,31 +1,53 @@
-Source Code:
-Add source code
-
 User manual:
 
 The proxy setup:
-The text file banned_words.txt contains the words to be banned and can easily be extended by simply adding new words.
-The proxy is started by running the command "./proxy.py port_nr" when standing in the project folder. port_nr is the port which the client will connect to the proxy. This argument is optional and if no argument is given the default port will be 3490. Valid ports are 1024-65535. Giving an argument outside this range will result in an error message and the port will be set to the default, 3490.
+The text file banned_words.txt contains the words to be banned and can easily be
+extended by simply adding new words.The proxy is started by running the command
+"./proxy.py port_nr" when standing in the project folder. port_nr is the port
+which the client will connect to the proxy. This argument is optional and if no
+argument is given the default port will be 3490. Valid ports are 1024-65535.
+Giving an argument outside this range will result in an error message and the
+port will be set to the default, 3490.
 
 The client setup:
-When the server is up and running, the client can connect to it. This is done by starting you favorite web browser and set up the preferences so that it connects to the proxy.
-* Go to preferences and check the radio button for manual proxy configuration and type 'localhost' in the HTTP-proxy field and type the same port number which you opened in the proxy setup, let the other fields be empty and make sure that the radio button 'SOCKS v5' is choosen.
+When the proxy is up and running, the client can connect to it. This is done by
+starting you favorite web browser and set up the preferences so that it connects
+to the proxy.
+* Go to preferences and check the radio button for manual proxy configuration
+and type 'localhost' in the HTTP-proxy field and type the same port number which
+you opened in the proxy setup, let the other fields be empty and make sure that
+the radio button 'SOCKS v5' is choosen.
 
-Now you can surf the web without worries that the browser will show you content which is insulting to your intelligence.
+Now you can surf the web without worries that the browser will show you content
+which is insulting to your intelligence.
+
 
 
 Technical description:
 
-The part of the code which handles simple GET requests (requirement 2) is implemented in the function 'request_handler()'. If the request from the client is not a GET request the socket is closed. If it instead is a GET request the 'request_handler()' function handles the request and close down the socket after the GET request has been handled.
+The part of the code which handles simple GET requests (requirement 2) is
+implemented in the function 'request_handler()'. This function is threaded
+for each GET request. If the request from the client is not a GET request the
+socket is closed. If it instead is a GET request the 'request_handler()'
+function handles the request and close down the socket after the GET request has
+been handled.
 
-The function which is filtering the URL is called 'URL_contains_bad_words()' and returns True if the searched URL contains bad word(s) and False if the URL is ok. If the URL contained bad words the user will be directed to the net ninny error page for bad URLs.
+The function which is filtering the URL is called 'URL_contains_bad_words()' and
+returns True if the searched URL contains bad word(s) and False if the URL is
+ok. If the URL contained bad words the user will be directed to the net ninny
+error page for bad URLs.
 
 The proxy is tested with Mozilla Firefox and Google Chrome browsers.
 
-The part of the code which enables the operator to choose which port the client will connect to is implemented in the main function.
+The part of the code which enables the operator to choose which port the client
+will connect to is implemented in the main function.
 
-The function 'content_contains_bad_words()' only search in files which contains the word 'text' in the 'content-type' in the header. Files such as images and gziped material will not be searched.
+The function 'content_contains_bad_words()' only search in files which contains
+the word 'text' in the 'content-type' in the header. Files such as images and
+gziped material will not be searched.
 
 Testing of the proxy:
 
-The proxy can open all filed listed on the course web site and can filter out the bad URL and bad contents examples. The proxy cannot search in https or gziped material. Advanced web sites such as 'www.youtube.com' works fine.
+The proxy can open all filed listed on the course web site and can filter out
+the bad URL and bad contents examples. The proxy cannot search in https or
+gziped material. Advanced web sites such as 'www.youtube.com' works fine.
