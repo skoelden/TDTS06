@@ -35,3 +35,6 @@
 
 12. Last ACK before 200 OK is for byte 164091 at time 5.455. This gives an average throughput of 30080 Bytes/s ~240 Kb/s.
     This includes TCP setup handshake and wating for the final ACK, but excluding these have little significance on the calculations.
+
+The connections is initialized by the client sending a SYN package, the server responds with a SYNACK and then the client ACKs. Then a connection is considered established.
+The estimated RTT determines the TCP timeout, i.e when a packet is considered lost. A lost packet requires a resend of some method for example go-back-n och selective repeat.
