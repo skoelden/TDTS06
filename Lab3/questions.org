@@ -1,3 +1,4 @@
+* Task A
 1. Firt package in POST request is number 4. Last package is number 199, since the next non-ACK package from the server is 200 OK.
 
 2. Client IP is 192.168.1.102 and its port is 1161.
@@ -38,3 +39,92 @@
 
 The connections is initialized by the client sending a SYN package, the server responds with a SYNACK and then the client ACKs. Then a connection is considered established.
 The estimated RTT determines the TCP timeout, i.e when a packet is considered lost. A lost packet requires a resend of some method for example go-back-n och selective repeat.
+
+* Task B
+
+13. The slow start progress is cisible as an exponential growth in sequence number at the very beginning of the firtst trace and somewhat visible in the second trace at multiple
+times in the plots. In the second trace, the exponential growth is so fast that it is almost a vertical line. The congestion avoidance takes over when the growth in sequence number is linear,
+since the congestion window is increasing linearly in time.
+
+The reason for the jaggedness of the first trace file while in congestion mode we think is due to a combination of the sender, for some reason, limits the window to 12 packets,
+the receiver does not ACK directly and the sender including the PSH flag in every sixth packet. This forces the receiver to acknowledge the received packets and thus the senders
+window will advance 6 packets at a time. If the receiver acknowleged packets directly when received, the packet sequence number over time would be more of a straight line since the
+window will advance one with each ACK received.
+
+14. The congestion window is the current estimate of how many bytes are allowed in the network at a given time. It is determined by the slow-start and congestion avoidance algorithms
+where it is increased if packets are sent and ACKed within resonable time and decresed when packets are lost. The congestion window is limited to the receiver advertised window, i.e if the
+receiver advertises it can only receive X bytes, the congestion window cannot be increased further.
+
+The effective window at the sender is the difference between the congestion window size and the size of the unacknowledged packets in the network, i.e how many packets the sender is allowed
+to send given what it has sent, what has been ACKed and the congestion window size.
+
+* Task C
+15. You cannot find the value of the congestion window since it is an internal state of the senders TCP algorithm and is not advertised in the TCP packet. Estimates can be made from captured
+trace files if one knows (or guesses) what algorithm the sender uses.
+
+| Connection | Total transferred bytes | Duration (in seconds) | RTT (in milliseconds) |       Avg. throughput (Kb/s) |
+|------------+-------------------------+-----------------------+-----------------------+------------------------------|
+|          1 |               165095720 |                   521 |                    12 |                         2535 |
+|          2 |               165842766 |                   521 |                    12 |                         2547 |
+|          3 |               165458792 |                   514 |                    12 |                         2575 |
+|          4 |               163235772 |                   512 |                    12 |                         2551 |
+|------------+-------------------------+-----------------------+-----------------------+------------------------------|
+|            |                     Sum |               Average |                       | Total avg. throughput (Kb/s) |
+|------------+-------------------------+-----------------------+-----------------------+------------------------------|
+|            |               659633050 |                   517 |                       |                        10207 |
+#+TBLFM: @2$5..@5$5=round(($2/$3)*(8/1000))
+#+TBLFM: @7$2=vsum(@2$2..@5$2)
+#+TBLFM: @7$3=vmean(@2$3..@5$3)
+#+TBLFM: @7$5=round(($2/$3)*(8/1000))
+
+16. The connections in this example share the network quite fairly. Both the RTT and the average throughput is similar.
+
+| Connection | Total transferred bytes | Duration (in seconds) | RTT (in milliseconds) |        Avg throughput (Kb/s) |
+|------------+-------------------------+-----------------------+-----------------------+------------------------------|
+|          1 |               261319130 |                    90 |                    13 |                        23228 |
+|          2 |               175995832 |                    90 |                    35 |                        15644 |
+|          3 |               151894552 |                    90 |                    68 |                        13502 |
+|          4 |               140388568 |                    90 |                    73 |                        12479 |
+|          5 |               108610702 |                    90 |                    49 |                         9654 |
+|          6 |                70644690 |                    90 |                    33 |                         6280 |
+|          7 |                65744938 |                    90 |                   135 |                         5844 |
+|          8 |                43212876 |                    90 |                   326 |                         3841 |
+|          9 |                39222524 |                    90 |                   322 |                         3486 |
+|------------+-------------------------+-----------------------+-----------------------+------------------------------|
+|            |                     Sum |               Average |                       | Total avg. throughput (Kb/s) |
+|------------+-------------------------+-----------------------+-----------------------+------------------------------|
+|            |              1057033812 |                    90 |                       |                        93959 |
+#+TBLFM: @2$5..@10$5=round(($2/$3)*(8/1000))
+#+TBLFM: @12$2=vsum(@2$2..@10$2)
+#+TBLFM: @12$3=vmean(@2$3..@10$3)
+#+TBLFM: @12$5=round(($2/$3)*(8/1000))
+
+17. The fairness is questionable. Although every transfer takes the same amount of time, the size transferred varies a lot
+and thus small transfers will have to wait the same amount of time as a large transfer. The bandwidth is not shares equaly
+where a large transfer will have higher bandwidth.
+
+| Connection | Total transferred bytes | Duration (in seconds) | RTT (in milliseconds) |        Avg throughput (Kb/s) |
+|------------+-------------------------+-----------------------+-----------------------+------------------------------|
+|          1 |               108851134 |                    58 |                    40 |                        15014 |
+|          2 |                90435681 |                    58 |                    36 |                        12474 |
+|          3 |                57971584 |                    53 |                   100 |                         8750 |
+|          4 |                32000012 |                    29 |                    68 |                         8828 |
+|          5 |                32557334 |                    35 |                    31 |                         7442 |
+|          6 |                27199361 |                    31 |                    33 |                         7019 |
+|          7 |                26329578 |                    31 |                   122 |                         6795 |
+|          8 |                38834490 |                    56 |                   146 |                         5548 |
+|          9 |                23571761 |                    35 |                    74 |                         5388 |
+|         10 |                36252962 |                    55 |                    66 |                         5273 |
+|------------+-------------------------+-----------------------+-----------------------+------------------------------|
+|            |                     Sum |               Average |                       | Total avg. throughput (Kb/s) |
+|------------+-------------------------+-----------------------+-----------------------+------------------------------|
+|            |               474003897 |                  44.1 |                       |                        85987 |
+#+TBLFM: @2$5..@11$5=round(($2/$3)*(8/1000))
+#+TBLFM: @13$3=vmean(@2$3..@11$3)
+#+TBLFM: @13$2=vsum(@2$2..@11$2)
+#+TBLFM: @13$5=round(($2/$3)*(8/1000))
+
+18. The fairness in this example is better, but not perfect. Idealy, if there are 10 users, easch user should get 1/10th of the bandwidth.
+In 17, the difference between the lowest and highest connection bandwidth is almost 7 times, whilst in 18 it is roughly 3. From this point
+of view, 18 is a more fair example than 17, but it is not perfect. Also, two connections seem to be favoured quite a lot higher than others
+and if we remove those, the difference between highest and lowest throughput is only ~50%.
