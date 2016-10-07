@@ -4,7 +4,7 @@ import java.util.Random;
 Project 4: implementing distributed, asynchronous, distance vector routing.
 
 THIS IS THE MAIN ROUTINE.  The TRACE and LINKCHANGES variables can be
-changed to modify the simulator's output and behavior.  
+changed to modify the simulator's output and behavior.
 
 This code is a Java translation of code provided by Kurose and Ross.
 
@@ -63,16 +63,16 @@ should not have to, and you defeinitely should not have to modify
   RouterSimulator()                         /* initialize the simulator */
   {
     double sum, avg;
-    Event evptr;  
+    Event evptr;
     long seed = 1234;
 
     String prop;
-    
+
     myGUI = new GuiTextArea("  Output window for Router Simulator  ");
-    
+
     if((prop=System.getProperty("Trace"))!=null)
       TRACE = Integer.parseInt(prop);
-  
+
 
     if((prop=System.getProperty("Seed"))!=null)
       seed = Long.parseLong(prop);
@@ -83,19 +83,19 @@ should not have to, and you defeinitely should not have to modify
 
     /* set initial costs */
     // remember that in java everything defaults to 0
-    connectcosts[0][1]=1;  
+    connectcosts[0][1]=1;
     connectcosts[0][2]=3;
     connectcosts[0][3]=7;
     connectcosts[1][0]=1;
     connectcosts[1][2]=1;
     connectcosts[1][3]=INFINITY;
-    connectcosts[2][0]=3;  
+    connectcosts[2][0]=3;
     connectcosts[2][1]=1;
     connectcosts[2][3]=2;
     connectcosts[3][0]=7;
     connectcosts[3][1]=INFINITY;
     connectcosts[3][2]=2;
-    
+
     nodes = new RouterNode[NUM_NODES];
     for(int i=0;i<NUM_NODES;i++)
       nodes[i] = new RouterNode(i,this,connectcosts[i]);
@@ -118,18 +118,18 @@ should not have to, and you defeinitely should not have to modify
       evptr.rtpktptr =  null;
       evptr.dest = 1;
       evptr.cost = 6;
-      insertevent(evptr);    
+      insertevent(evptr);
     }
-  
+
   }
 
 
 
   void runSimulation(){
     Event eventptr;
-   
+
     while (true) {
-     
+
       eventptr = evlist;            /* get next event to simulate */
       if (eventptr==null)
 	break;
@@ -143,10 +143,10 @@ should not have to, and you defeinitely should not have to modify
           if (eventptr.evtype == FROM_LAYER2 ) {
 	    myGUI.print(" src:"+eventptr.rtpktptr.sourceid);
             myGUI.print(", dest:"+eventptr.rtpktptr.destid);
-            myGUI.println(", contents: "+ 
+            myGUI.println(", contents: "+
               eventptr.rtpktptr.mincost[0]+" "+ eventptr.rtpktptr.mincost[1]+
 			       " "+
-			       eventptr.rtpktptr.mincost[2]+" "+ 
+			       eventptr.rtpktptr.mincost[2]+" "+
 			       eventptr.rtpktptr.mincost[3]);
             }
           }
@@ -165,14 +165,14 @@ should not have to, and you defeinitely should not have to modify
       }
       else
 	{ myGUI.println("Panic: unknown event type\n"); System.exit(0); }
-      
+
       if(TRACE > 2)
 	for(int i=0;i<NUM_NODES;i++)
 	  nodes[i].printDistanceTable();
 
     }
-    
-    
+
+
     myGUI.println("\nSimulator terminated at t="+clocktime+
 		       ", no packets in medium\n");
   }
@@ -184,7 +184,7 @@ should not have to, and you defeinitely should not have to modify
   /********************* EVENT HANDLINE ROUTINES *******/
   /*  The next set of routines handle the event list   */
   /*****************************************************/
-  
+
 
   void insertevent(Event p){
     Event q,qold;
@@ -192,7 +192,7 @@ should not have to, and you defeinitely should not have to modify
     if (TRACE>3) {
       myGUI.println("            INSERTEVENT: time is "+clocktime);
       myGUI.println("            INSERTEVENT: future time will be "+
-			 p.evtime); 
+			 p.evtime);
     }
     q = evlist;     /* q points to header of list in which p struct inserted */
     if (q==null) {   /* list is empty */
@@ -202,7 +202,7 @@ should not have to, and you defeinitely should not have to modify
     }
     else {
       for (qold = q; q !=null && p.evtime > q.evtime; q=q.next)
-	qold=q; 
+	qold=q;
       if (q==null) {   /* end of list */
 	qold.next = p;
 	p.prev = qold;
@@ -263,14 +263,14 @@ should not have to, and you defeinitely should not have to modify
     }
 
     /* make a copy of the packet student just gave me since may */
-    /* be modified after we return back */ 
+    /* be modified after we return back */
     mypktptr = (RouterPacket)packet.clone();
 
     if (TRACE>2)  {
       myGUI.print("    TOLAYER2: source: "+mypktptr.sourceid+
 		       " dest: "+ mypktptr.destid+
 		       "             costs:");
-      
+
       for (i=0; i<NUM_NODES; i++)
         myGUI.print(mypktptr.mincost[i]+" ");
       myGUI.println();
@@ -287,16 +287,16 @@ should not have to, and you defeinitely should not have to modify
        and 10 time units after the latest arrival time of packets
        currently in the medium on their way to the destination */
     lastime = clocktime;
-    for (q=evlist; q!=null ; q = q.next) 
-      if ( (q.evtype==FROM_LAYER2  && q.eventity==evptr.eventity) ) 
+    for (q=evlist; q!=null ; q = q.next)
+      if ( (q.evtype==FROM_LAYER2  && q.eventity==evptr.eventity) )
 	lastime = q.evtime;
     evptr.evtime =  lastime + 9*generator.nextDouble() + 1;
 
- 
-    if (TRACE>2)  
+
+    if (TRACE>2)
       myGUI.println("    TOLAYER2: scheduling arrival on other side");
     insertevent(evptr);
-  } 
+  }
 }
 
 class  Event {

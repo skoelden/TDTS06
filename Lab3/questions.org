@@ -1,5 +1,5 @@
 * Task A
-1. Firt package in POST request is number 4. Last package is number 199, since the next non-ACK package from the server is 200 OK.
+1. First package in POST request is number 4. Last package is number 199, since the next non-ACK package from the server is 200 OK.
 
 2. Client IP is 192.168.1.102 and its port is 1161.
 
@@ -62,16 +62,16 @@ to send given what it has sent, what has been ACKed and the congestion window si
 15. You cannot find the value of the congestion window since it is an internal state of the senders TCP algorithm and is not advertised in the TCP packet. Estimates can be made from captured
 trace files if one knows (or guesses) what algorithm the sender uses.
 
-| Connection | Total transferred bytes | Duration (in seconds) | RTT (in milliseconds) |       Avg. throughput (Kb/s) |
-|------------+-------------------------+-----------------------+-----------------------+------------------------------|
-|          1 |               165095720 |                   521 |                    12 |                         2535 |
-|          2 |               165842766 |                   521 |                    12 |                         2547 |
-|          3 |               165458792 |                   514 |                    12 |                         2575 |
-|          4 |               163235772 |                   512 |                    12 |                         2551 |
-|------------+-------------------------+-----------------------+-----------------------+------------------------------|
-|            |                     Sum |               Average |                       | Total avg. throughput (Kb/s) |
-|------------+-------------------------+-----------------------+-----------------------+------------------------------|
-|            |               659633050 |                   517 |                       |                        10207 |
+| Connection | Tot. transferred bytes | Duration (s) | RTT (ms) |       Avg. throughput (Kb/s) |
+|------------+------------------------+--------------+----------+------------------------------|
+|          1 |              165095720 |          521 |       12 |                         2535 |
+|          2 |              165842766 |          521 |       12 |                         2547 |
+|          3 |              165458792 |          514 |       12 |                         2575 |
+|          4 |              163235772 |          512 |       12 |                         2551 |
+|------------+------------------------+--------------+----------+------------------------------|
+|            |                    Sum |      Average |          | Total avg. throughput (Kb/s) |
+|------------+------------------------+--------------+----------+------------------------------|
+|            |              659633050 |          517 |          |                        10207 |
 #+TBLFM: @2$5..@5$5=round(($2/$3)*(8/1000))
 #+TBLFM: @7$2=vsum(@2$2..@5$2)
 #+TBLFM: @7$3=vmean(@2$3..@5$3)
@@ -79,21 +79,21 @@ trace files if one knows (or guesses) what algorithm the sender uses.
 
 16. The connections in this example share the network quite fairly. Both the RTT and the average throughput is similar.
 
-| Connection | Total transferred bytes | Duration (in seconds) | RTT (in milliseconds) |        Avg throughput (Kb/s) |
-|------------+-------------------------+-----------------------+-----------------------+------------------------------|
-|          1 |               261319130 |                    90 |                    13 |                        23228 |
-|          2 |               175995832 |                    90 |                    35 |                        15644 |
-|          3 |               151894552 |                    90 |                    68 |                        13502 |
-|          4 |               140388568 |                    90 |                    73 |                        12479 |
-|          5 |               108610702 |                    90 |                    49 |                         9654 |
-|          6 |                70644690 |                    90 |                    33 |                         6280 |
-|          7 |                65744938 |                    90 |                   135 |                         5844 |
-|          8 |                43212876 |                    90 |                   326 |                         3841 |
-|          9 |                39222524 |                    90 |                   322 |                         3486 |
-|------------+-------------------------+-----------------------+-----------------------+------------------------------|
-|            |                     Sum |               Average |                       | Total avg. throughput (Kb/s) |
-|------------+-------------------------+-----------------------+-----------------------+------------------------------|
-|            |              1057033812 |                    90 |                       |                        93959 |
+| Connection | Tot. transferred bytes | Duration (s) | RTT (ms) |        Avg throughput (Kb/s) |
+|------------+------------------------+--------------+----------+------------------------------|
+|          1 |              261319130 |           90 |       13 |                        23228 |
+|          2 |              175995832 |           90 |       35 |                        15644 |
+|          3 |              151894552 |           90 |       68 |                        13502 |
+|          4 |              140388568 |           90 |       73 |                        12479 |
+|          5 |              108610702 |           90 |       49 |                         9654 |
+|          6 |               70644690 |           90 |       33 |                         6280 |
+|          7 |               65744938 |           90 |      135 |                         5844 |
+|          8 |               43212876 |           90 |      326 |                         3841 |
+|          9 |               39222524 |           90 |      322 |                         3486 |
+|------------+------------------------+--------------+----------+------------------------------|
+|            |                    Sum |      Average |          | Total avg. throughput (Kb/s) |
+|------------+------------------------+--------------+----------+------------------------------|
+|            |             1057033812 |           90 |          |                        93959 |
 #+TBLFM: @2$5..@10$5=round(($2/$3)*(8/1000))
 #+TBLFM: @12$2=vsum(@2$2..@10$2)
 #+TBLFM: @12$3=vmean(@2$3..@10$3)
@@ -103,22 +103,22 @@ trace files if one knows (or guesses) what algorithm the sender uses.
 and thus small transfers will have to wait the same amount of time as a large transfer. The bandwidth is not shares equaly
 where a large transfer will have higher bandwidth.
 
-| Connection | Total transferred bytes | Duration (in seconds) | RTT (in milliseconds) |        Avg throughput (Kb/s) |
-|------------+-------------------------+-----------------------+-----------------------+------------------------------|
-|          1 |               108851134 |                    58 |                    40 |                        15014 |
-|          2 |                90435681 |                    58 |                    36 |                        12474 |
-|          3 |                57971584 |                    53 |                   100 |                         8750 |
-|          4 |                32000012 |                    29 |                    68 |                         8828 |
-|          5 |                32557334 |                    35 |                    31 |                         7442 |
-|          6 |                27199361 |                    31 |                    33 |                         7019 |
-|          7 |                26329578 |                    31 |                   122 |                         6795 |
-|          8 |                38834490 |                    56 |                   146 |                         5548 |
-|          9 |                23571761 |                    35 |                    74 |                         5388 |
-|         10 |                36252962 |                    55 |                    66 |                         5273 |
-|------------+-------------------------+-----------------------+-----------------------+------------------------------|
-|            |                     Sum |               Average |                       | Total avg. throughput (Kb/s) |
-|------------+-------------------------+-----------------------+-----------------------+------------------------------|
-|            |               474003897 |                  44.1 |                       |                        85987 |
+| Connection | Tot. transferred bytes | Duration (s) | RTT (ms) |        Avg throughput (Kb/s) |
+|------------+------------------------+--------------+----------+------------------------------|
+|          1 |              108851134 |           58 |       40 |                        15014 |
+|          2 |               90435681 |           58 |       36 |                        12474 |
+|          3 |               57971584 |           53 |      100 |                         8750 |
+|          4 |               32000012 |           29 |       68 |                         8828 |
+|          5 |               32557334 |           35 |       31 |                         7442 |
+|          6 |               27199361 |           31 |       33 |                         7019 |
+|          7 |               26329578 |           31 |      122 |                         6795 |
+|          8 |               38834490 |           56 |      146 |                         5548 |
+|          9 |               23571761 |           35 |       74 |                         5388 |
+|         10 |               36252962 |           55 |       66 |                         5273 |
+|------------+------------------------+--------------+----------+------------------------------|
+|            |                    Sum |      Average |          | Total avg. throughput (Kb/s) |
+|------------+------------------------+--------------+----------+------------------------------|
+|            |              474003897 |         44.1 |          |                        85987 |
 #+TBLFM: @2$5..@11$5=round(($2/$3)*(8/1000))
 #+TBLFM: @13$3=vmean(@2$3..@11$3)
 #+TBLFM: @13$2=vsum(@2$2..@11$2)
@@ -127,4 +127,5 @@ where a large transfer will have higher bandwidth.
 18. The fairness in this example is better, but not perfect. Idealy, if there are 10 users, easch user should get 1/10th of the bandwidth.
 In 17, the difference between the lowest and highest connection bandwidth is almost 7 times, whilst in 18 it is roughly 3. From this point
 of view, 18 is a more fair example than 17, but it is not perfect. Also, two connections seem to be favoured quite a lot higher than others
-and if we remove those, the difference between highest and lowest throughput is only ~50%.
+and if we remove those, the difference between highest and lowest throughput is only ~50%. This data is from a BitTorrent file transfer and
+thus other factors than the TCP fairness algorithms are involved, for example giving higher bandwidth to some users who seed a lot.
