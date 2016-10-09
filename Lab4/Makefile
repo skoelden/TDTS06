@@ -12,13 +12,13 @@ JAVAC = /usr/bin/javac
 all: RouterSimulator.class RouterPacket.class RouterNode.class GuiTextArea.class
 
 RouterSimulator.class: RouterSimulator.java
-	-@$(JAVAC) RouterSimulator.java
+	-@$(JAVAC) -g RouterSimulator.java
 
 RouterPacket.class: RouterPacket.java
-	-@$(JAVAC) RouterPacket.java
+	-@$(JAVAC) -g RouterPacket.java
 
 RouterNode.class: RouterNode.java
-	-@$(JAVAC) RouterNode.java
+	-@$(JAVAC) -g RouterNode.java
 
 GuiTextArea.class: GuiTextArea.java
 	-@$(JAVAC) GuiTextArea.java
