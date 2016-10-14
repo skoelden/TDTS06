@@ -1,0 +1,22 @@
+* I
+Distance vector routing works by each router keeping their own record about what other routers know about the network.
+Initially, each router broadcasts their initial knowledge about their surrounding to its neighbor routers. Upon receiving new information from another router,
+a new best estimate for each destination is calculated on each router. If the information has changed, this new distance vector is broadcasted to the neighbor routers again.
+This continues until the messages recieved does not change the shortest path between routers and thus a router will not broadcast their distance vector.
+Then the distance vector messages will halt, only to continue if the network topology or cost between nodes changes.
+* II
+The algorithms were tested by running the three simulation cases and manually checking that the algorithms converge to the shortest path. In networks as small
+as these ones this is absolutely doable. The convergance is checked both before and after link cost changes. In case of poisoned reverse, the result before and after
+implementing the poisoning was checked and a huge decrese in messages between the routers was observed.
+* III
+Poisoned reverse fails when a network containing loops with three or more routers ar connected in a loop and the link change happends outside this loop. This will result in the
+"count-to-infinity" problem, where the best route estimate grows by one each message update until the new link cost, or infinity if the link is broken, is reached.
+* IV
+A possible solotion to the problem with loops and poisoned reverse is to implement a holddown timer [1]. This timer is set when a link cost increases or is broken and is set to some value,
+for example 180 second in RIP [2]. During this countdown, no new cost estimates for the node that increased in cost can be set for the router with the countdown. This will ensute that the
+router that detected the cost increase will not be fooled to think that there is a route to the node on the other side of the link that increased in cost by tanking one lap in the loop and
+then going via itself. It will also migitate "small" count-to-infinity problems where there is an alternative but costly route to the cut off node from within the loop.
+
+* Footnotes
+[1] https://en.wikipedia.org/wiki/Holddown
+[2] https://en.wikipedia.org/wiki/Routing_Information_Protocol

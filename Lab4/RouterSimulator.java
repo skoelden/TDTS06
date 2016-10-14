@@ -14,10 +14,10 @@ import java.util.Random;
 
 public class RouterSimulator {
 
-    public static final int NUM_NODES = 5;
+    public static final int NUM_NODES = 4;
     public static final int INFINITY = 999;
 
-    public static final boolean LINKCHANGES = true;
+    public static final boolean LINKCHANGES = false;
 
     public int TRACE = 1;             /* for debugging */
 
@@ -86,23 +86,15 @@ should not have to, and you defeinitely should not have to modify
             connectcosts[0][1]=1;
             connectcosts[0][2]=3;
             connectcosts[0][3]=7;
-            connectcosts[0][4]=1;
             connectcosts[1][0]=1;
             connectcosts[1][2]=1;
             connectcosts[1][3]=INFINITY;
-            connectcosts[1][4]=1;
             connectcosts[2][0]=3;
             connectcosts[2][1]=1;
             connectcosts[2][3]=2;
-            connectcosts[2][4]=4;
             connectcosts[3][0]=7;
             connectcosts[3][1]=INFINITY;
             connectcosts[3][2]=2;
-            connectcosts[3][4]=INFINITY;
-            connectcosts[4][0]=1;
-            connectcosts[4][1]=1;
-            connectcosts[4][2]=4;
-            connectcosts[4][3]=INFINITY;
 
             nodes = new RouterNode[NUM_NODES];
             for(int i=0;i<NUM_NODES;i++)
@@ -174,7 +166,7 @@ should not have to, and you defeinitely should not have to modify
             else
             { myGUI.println("Panic: unknown event type\n"); System.exit(0); }
 
-//            if(TRACE > 2)
+//           if(TRACE > 2)
 //                for(int i=0;i<NUM_NODES;i++)
 //                    nodes[i].printDistanceTable();
 
