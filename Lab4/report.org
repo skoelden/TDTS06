@@ -1,3 +1,11 @@
+Note: We have made some changes to the lab skeleton. According to us it's an improvement, but it does not work exactly as original. Insted of each router printing
+the distance vector each time ANY router updates its state, only the one updating its ditance table is printing something. This makes the output more readable.
+
+Also, the Makefile id modified such that all .class files can be deleted and will be recompiled with make all. make test also depends on make all, such that if neccecary, files will be recompiled.
+
+
+The modificatins are available at: https://github.com/skoelden/TDTS06
+
 * I
 Distance vector routing works by each router keeping their own record about what other routers know about the network.
 Initially, each router broadcasts their initial knowledge about their surrounding to its neighbor routers. Upon receiving new information from another router,
@@ -15,7 +23,8 @@ Poisoned reverse fails when a network containing loops with three or more router
 A possible solotion to the problem with loops and poisoned reverse is to implement a holddown timer [1]. This timer is set when a link cost increases or is broken and is set to some value,
 for example 180 second in RIP [2]. During this countdown, no new cost estimates for the node that increased in cost can be set for the router with the countdown. This will ensute that the
 router that detected the cost increase will not be fooled to think that there is a route to the node on the other side of the link that increased in cost by tanking one lap in the loop and
-then going via itself. It will also migitate "small" count-to-infinity problems where there is an alternative but costly route to the cut off node from within the loop.
+then going via itself. It will also migitate "small" count-to-infinity problems where there is an alternative but costly route to the cut off node from within the loop. If such a route exists,
+there will be the same incremental route cost messages between some nodes until the other route is the shortest one.
 
 * Footnotes
 [1] https://en.wikipedia.org/wiki/Holddown

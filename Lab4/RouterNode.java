@@ -10,6 +10,8 @@ public class RouterNode {
     private int[] neighbors;
     private int[][] distTable;
     private int[] distVector = new int[RouterSimulator.NUM_NODES];
+
+    private boolean poisonedReverseEnabled = false;
     //--------------------------------------------------
     public RouterNode(int ID, RouterSimulator sim, int[] costs) {
         myID = ID;
@@ -182,9 +184,11 @@ public class RouterNode {
             int[] poisonedReversedCosts = new int[RouterSimulator.NUM_NODES];
             System.arraycopy(distVector, 0, poisonedReversedCosts, 0, distVector.length);
 
-            for(int j = 0; j < routes.length; j++) {
-                if(neighbors[i] == routes[j] && j != neighbors[i]) {
-                    poisonedReversedCosts[j] = RouterSimulator.INFINITY;
+            if(poisonedReverseEnabled){
+                for(int j = 0; j < routes.length; j++) {
+                    if(neighbors[i] == routes[j] && j != neighbors[i]) {
+                        poisonedReversedCosts[j] = RouterSimulator.INFINITY;
+                    }
                 }
             }
             sendUpdate(new RouterPacket(myID, neighbors[i], poisonedReversedCosts));
